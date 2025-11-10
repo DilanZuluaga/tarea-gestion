@@ -44,6 +44,9 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
+# Ensure public directory exists
+RUN mkdir -p /app/public
+
 # Stage 3: Runner
 FROM node:20-alpine AS runner
 WORKDIR /app
