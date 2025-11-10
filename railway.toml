@@ -2,11 +2,9 @@
 # https://docs.railway.app/deploy/config-as-code
 
 [build]
-# Use Nixpacks builder (default for Next.js)
-builder = "NIXPACKS"
-
-# Custom build command (optional, Nixpacks auto-detects)
-buildCommand = "yarn install && yarn build"
+# Use Docker builder (Dockerfile present)
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 # Watch patterns for rebuilds
 watchPatterns = [
@@ -15,13 +13,11 @@ watchPatterns = [
   "**/*.js",
   "**/*.jsx",
   "package.json",
-  "yarn.lock"
+  "yarn.lock",
+  "Dockerfile"
 ]
 
 [deploy]
-# Start command for production
-startCommand = "yarn start"
-
 # Port configuration (Railway sets this automatically)
 # Your app should listen on $PORT environment variable
 numReplicas = 1
@@ -30,9 +26,10 @@ numReplicas = 1
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
-# Health check configuration
+# Health check configuration for Docker deployments
+# Railway will check this path to determine if the service is healthy
 healthcheckPath = "/"
-healthcheckTimeout = 100
+healthcheckTimeout = 300
 
 [env]
 # Environment variables template
