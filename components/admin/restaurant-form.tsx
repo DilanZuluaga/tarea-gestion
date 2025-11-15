@@ -27,7 +27,7 @@ const formSchema = z.object({
   delivery_time_min: z.string().min(1, 'Requerido'),
   minimum_order: z.string().min(1, 'Requerido'),
   rating: z.string().optional(),
-  is_active: z.boolean().default(true),
+  is_active: z.boolean(),
 })
 
 type FormData = z.infer<typeof formSchema>
