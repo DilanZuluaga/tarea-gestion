@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ShoppingCart, User, LogOut, Package, UtensilsCrossed } from 'lucide-react'
+import { ShoppingCart, User, LogOut, Package, UtensilsCrossed, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -29,13 +29,40 @@ export function Navbar({ cartItemCount = 0 }: NavbarProps) {
   const supabase = createClient()
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    toast({
-      title: 'Sesión cerrada',
-      description: 'Hasta pronto!',
-    })
-    router.push('/login')
-    router.refresh()
+    try {
+      console.log('🚪 Signing out...')
+
+      // Try to sign out with a timeout
+      const signOutPromise = supabase.auth.signOut()
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Sign out timeout')), 3000)
+      )
+
+      try {
+        const { error } = await Promise.race([signOutPromise, timeoutPromise]) as any
+        console.log('🚪 Sign out result:', { error })
+
+        if (error && error.message !== 'Sign out timeout') {
+          console.error('Sign out error:', error)
+        }
+      } catch (timeoutError) {
+        console.log('🚪 Sign out timed out, forcing local logout')
+      }
+
+      // Clear local state regardless of server response
+      toast({
+        title: 'Sesión cerrada',
+        description: 'Hasta pronto!',
+      })
+
+      router.push('/login')
+      router.refresh()
+    } catch (error) {
+      console.error('Error signing out:', error)
+      // Force redirect to login anyway
+      router.push('/login')
+      router.refresh()
+    }
   }
 
   const getInitials = () => {
@@ -94,6 +121,17 @@ export function Navbar({ cartItemCount = 0 }: NavbarProps) {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {profile?.role === 'admin' && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="cursor-pointer text-orange-600">
+                          <Shield className="mr-2 h-4 w-4" />
+                          Panel Admin
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link href="/orders" className="cursor-pointer">
                       <Package className="mr-2 h-4 w-4" />

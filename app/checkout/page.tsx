@@ -23,6 +23,12 @@ export default function CheckoutPage() {
   const supabase = createClient()
 
   const [loading, setLoading] = useState(false)
+
+  // Debug log on component mount
+  console.log('🏪 Checkout page loaded')
+  console.log('Has user:', !!user)
+  console.log('Has cart:', !!cart.restaurant)
+  console.log('Cart items:', cart.items.length)
   const [formData, setFormData] = useState({
     address: '',
     instructions: '',
@@ -31,15 +37,25 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('🎯 Form submitted!')
 
     if (!user || !cart.restaurant) {
+      console.log('❌ Missing user or restaurant:', { hasUser: !!user, hasRestaurant: !!cart.restaurant })
       return
     }
 
+    console.log('✅ User and restaurant validated')
     setLoading(true)
+    console.log('⏳ Loading set to true')
 
     try {
+      console.log('🛒 Starting order creation...')
+      console.log('User ID:', user.id)
+      console.log('Restaurant ID:', cart.restaurant.id)
+      console.log('Cart total:', cart.total)
+
       // Create order
+      console.log('📝 Inserting order...')
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -56,7 +72,14 @@ export default function CheckoutPage() {
         .select()
         .single()
 
-      if (orderError) throw orderError
+      console.log('📦 Order insert result:', { order, orderError })
+
+      if (orderError) {
+        console.error('❌ Order creation error details:', JSON.stringify(orderError, null, 2))
+        throw orderError
+      }
+
+      console.log('✅ Order created:', order.id)
 
       // Create order items
       const orderItems = cart.items.map(item => ({
@@ -67,11 +90,19 @@ export default function CheckoutPage() {
         subtotal: item.product.price * item.quantity,
       }))
 
+      console.log('📝 Inserting order items:', orderItems.length, 'items')
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItems)
 
-      if (itemsError) throw itemsError
+      console.log('📦 Order items result:', { itemsError })
+
+      if (itemsError) {
+        console.error('❌ Items error:', JSON.stringify(itemsError, null, 2))
+        throw itemsError
+      }
+
+      console.log('✅ Order items created successfully')
 
       toast({
         title: 'Pedido creado',

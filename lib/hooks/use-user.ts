@@ -9,24 +9,30 @@ export function useUser() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
+    const supabase = createClient()
+
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      console.log('👤 useUser: Fetching user...')
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      console.log('👤 useUser: User fetched:', { hasUser: !!user, userError })
       setUser(user)
 
       if (user) {
-        const { data: profile } = await supabase
+        console.log('👤 useUser: Fetching profile for user:', user.id)
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single()
 
+        console.log('👤 useUser: Profile fetched:', { profile, profileError })
         setProfile(profile)
       }
 
       setLoading(false)
+      console.log('👤 useUser: Loading complete')
     }
 
     getUser()

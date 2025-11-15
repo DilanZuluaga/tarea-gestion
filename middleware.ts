@@ -8,6 +8,7 @@ export async function middleware(request: NextRequest) {
     },
   })
 
+  // Client for auth check
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -38,13 +39,32 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+  console.log('🔐 Middleware - Path:', request.nextUrl.pathname)
+  console.log('🔐 Middleware - Has user:', !!user)
+  console.log('🔐 Middleware - Auth error:', authError)
+  if (user) {
+    console.log('🔐 Middleware - User ID:', user.id)
+  }
+
+  // Admin routes - only check authentication, role check happens in layout
+  const adminPaths = ['/admin']
+  const isAdminPath = adminPaths.some(path => request.nextUrl.pathname.startsWith(path))
+
+  if (isAdminPath && !user) {
+    console.log('🔐 Middleware - Redirecting to login (admin path, no user)')
+    const redirectUrl = new URL('/login', request.url)
+    redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+    return NextResponse.redirect(redirectUrl)
+  }
 
   // Protected routes - redirect to login if not authenticated
   const protectedPaths = ['/cart', '/checkout', '/orders', '/profile']
   const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
   if (!user && isProtectedPath) {
+    console.log('🔐 Middleware - Redirecting to login (protected path, no user)')
     const redirectUrl = new URL('/login', request.url)
     redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
