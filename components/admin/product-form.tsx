@@ -30,7 +30,7 @@ const formSchema = z.object({
   category: z.string().min(1, 'La categoría es requerida'),
   restaurant_id: z.string().min(1, 'Selecciona un restaurante'),
   image_url: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
-  is_available: z.boolean().default(true),
+  is_available: z.boolean(),
 })
 
 type FormData = z.infer<typeof formSchema>
