@@ -5,14 +5,15 @@ import { redirect } from 'next/navigation'
 export default async function EditRestaurantPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
   const supabase = await createClient()
+  const { id } = await params
 
   const { data: restaurant, error } = await supabase
     .from('restaurants')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error || !restaurant) {

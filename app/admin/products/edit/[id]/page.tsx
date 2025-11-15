@@ -5,12 +5,13 @@ import { redirect } from 'next/navigation'
 export default async function EditProductPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
   const supabase = await createClient()
+  const { id } = await params
 
   const [{ data: product }, { data: restaurants }] = await Promise.all([
-    supabase.from('products').select('*').eq('id', params.id).single(),
+    supabase.from('products').select('*').eq('id', id).single(),
     supabase.from('restaurants').select('id, name').order('name')
   ])
 
